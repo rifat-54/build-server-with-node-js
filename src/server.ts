@@ -1,17 +1,44 @@
 import http, { IncomingMessage, Server, ServerResponse } from "http"
 import config from "./config";
+import addRoutes, { routes } from "./helpers/RouteHandler";
+import sendJson from "./helpers/sendJson";
+
+
+addRoutes("GET","/",(req,res)=>{
+   sendJson(res,200,{
+            message:"data found",
+            path:req.url 
+        })
+})
 
 
 const server:Server=http.createServer((req:IncomingMessage,res:ServerResponse)=>{
     console.log("server is running");
-    if(req.url=='/' && req.method=="GET"){
-        res.writeHead(200,{"content-type":"application/json"})
 
+    const method=req.method?.toUpperCase() || ""
+    const path=req.url || "";
+
+    const methodMap=routes.get(method)
+    const handler=methodMap?.get(path)
+
+    if(handler){
+        handler(req,res)
+    }else{
+        res.writeHead(404,{"content-type":"application/json"})
         res.end(JSON.stringify({
-        message:"hello from node js with typescript",
-        path:req.url
+            message:"not found",
+            path
         }))
     }
+
+    // if(req.url=='/' && req.method=="GET"){
+    //     res.writeHead(200,{"content-type":"application/json"})
+
+    //     res.end(JSON.stringify({
+    //     message:"hello from node js with typescript",
+    //     path:req.url
+    //     }))
+    // }
 
     if(req.url=="/api" && req.method=="GET"){
         console.log("triger api route ");
